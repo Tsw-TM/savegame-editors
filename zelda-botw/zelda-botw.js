@@ -119,16 +119,25 @@ SavegameEditor={
 
 
 	_getItemTranslation:function(itemId){
+		if(typeof BOTW_I18N!=='undefined' && typeof BOTW_I18N.itemName==='function')
+			return BOTW_I18N.itemName(itemId);
 		for(var i=0; i<BOTW_Data.Translations.length; i++)
 			if(BOTW_Data.Translations[i].items[itemId])
 				return BOTW_Data.Translations[i].items[itemId];
 		return '<span style="color:red">'+itemId+'</span>'
 	},
 	_getItemCategory:function(itemId){
+		if(typeof BOTW_I18N!=='undefined' && typeof BOTW_I18N.itemCategory==='function')
+			return BOTW_I18N.itemCategory(itemId);
 		for(var i=0; i<BOTW_Data.Translations.length; i++)
 			if(BOTW_Data.Translations[i].items[itemId])
 				return BOTW_Data.Translations[i].id;
 		return 'other'
+	},
+	_getItemCategoryLabel:function(categoryId){
+		if(typeof BOTW_I18N!=='undefined' && typeof BOTW_I18N.categoryLabel==='function')
+			return BOTW_I18N.categoryLabel(categoryId);
+		return categoryId;
 	},
 
 	_readString:function(offset, len){
@@ -194,6 +203,7 @@ SavegameEditor={
 		var span=document.createElement('span');
 		span.className='item-name clickable';
 		span.id='item-name'+i;
+		span.dataset.itemId=itemNameId;
 		span.innerHTML=this._getItemTranslation(itemNameId);
 		span.addEventListener('click', function(){
 			SavegameEditor.editItem(i);
@@ -202,7 +212,10 @@ SavegameEditor={
 
 		var input;
 		if(itemCat && itemCat==='clothes'){
-			input=select('item'+i, BOTW_Data.DYE_COLORS, function(){
+			var dyeOptions=(typeof BOTW_I18N!=='undefined' && typeof BOTW_I18N.getDyeColorOptions==='function')
+				? BOTW_I18N.getDyeColorOptions()
+				: BOTW_Data.DYE_COLORS;
+			input=select('item'+i, dyeOptions, function(){
 				BOTW_Icons.setIcon(img, SavegameEditor._loadItemName(i), parseInt(this.value));
 			});
 			input.value=itemVal;
@@ -219,6 +232,8 @@ SavegameEditor={
 			document.createElement('div'), /* modifier column */
 			input
 		);
+		r.dataset.itemCat=itemCat;
+		r.dataset.itemId=itemNameId;
 		r.className+=' row-items';
 		r.children[1].appendChild(itemNumber);
 		return r;
@@ -268,7 +283,11 @@ SavegameEditor={
 			(row.previousElementSibling || row).scrollIntoView({block:'start', behavior:'smooth'});
 		}
 		this._writeItemName(i, nameId);
+		document.getElementById('item-name'+i).dataset.itemId=nameId;
 		document.getElementById('item-name'+i).innerHTML=this._getItemTranslation(nameId);
+		var row=this._getItemRow(i);
+		row.dataset.itemId=nameId;
+		row.dataset.itemCat=newCat;
 		BOTW_Icons.setIcon(document.getElementById('icon'+i), nameId);
 		if(document.getElementById('number-item'+i))
 			document.getElementById('number-item'+i).maxValue=this._getItemMaximumQuantity(nameId);
@@ -325,10 +344,56 @@ SavegameEditor={
 	_arrayToSelectOpts:function(arr){
 		var arr2=[];
 		for(var i=0; i<arr.length; i++){
-			var name=BOTW_Data.Translations[6].items[arr[i]] || arr[i];
+			var name=this._getItemTranslation(arr[i]) || arr[i];
 			arr2.push({name:name, value:arr[i]});
 		}
 		return arr2;
+	},
+	_setSelectOptions:function(selectEl, options, def){
+		while(selectEl.firstChild)
+			selectEl.removeChild(selectEl.firstChild);
+		var unknownValue=typeof def!=='undefined';
+		for(var i=0; i<options.length; i++){
+			var option=document.createElement('option');
+			if(typeof options[i] === 'number'){
+				option.value=options[i];
+				option.innerHTML=options[i];
+			}else if(typeof options[i] === 'string'){
+				option.value=i;
+				option.innerHTML=options[i];
+			}else if(typeof options[i] === 'object' && typeof options[i].value!=='undefined' && typeof options[i].name!=='undefined'){
+				option.value=options[i].value;
+				option.innerHTML=options[i].name;
+			}else if(typeof options[i] === 'object'){
+				selectEl.appendChild(options[i]);
+				continue;
+			}
+			selectEl.appendChild(option);
+			if(unknownValue){
+				if(typeof options[i] === 'number' && options[i]==def)
+					unknownValue=false;
+				else if(typeof options[i] === 'string' && i==def)
+					unknownValue=false;
+				else if(typeof options[i] === 'object' && typeof options[i].value!=='undefined' && options[i].value==def)
+					unknownValue=false;
+			}
+		}
+		if(unknownValue){
+			var unknownOption=document.createElement('option');
+			unknownOption.value=def;
+			unknownOption.innerHTML='['+(typeof def==='number'? def.toString(16) : def)+']';
+			selectEl.appendChild(unknownOption);
+		}
+		if(typeof def!=='undefined')
+			selectEl.value=def;
+	},
+	_applyItemTooltips:function(){
+		var weaponTooltip=(typeof t==='function')?t('tooltip.weaponDurability'): 'Weapon durability';
+		var bowTooltip=(typeof t==='function')?t('tooltip.bowDurability'): 'Bow durability';
+		var shieldTooltip=(typeof t==='function')?t('tooltip.shieldDurability'): 'Shield durability';
+		MarcTooltips.add('#container-weapons input',{text:weaponTooltip,position:'bottom',align:'right'});
+		MarcTooltips.add('#container-bows input',{text:bowTooltip,position:'bottom',align:'right'});
+		MarcTooltips.add('#container-shields input',{text:shieldTooltip,position:'bottom',align:'right'});
 	},
 
 	/* check if savegame is valid */
@@ -377,13 +442,15 @@ SavegameEditor={
 		this.selectItem.categories={};
 		for(var i=0; i<BOTW_Data.Translations.length; i++){
 			var optGroup=document.createElement('optgroup');
-			optGroup.label=BOTW_Data.Translations[i].id;
+			optGroup.dataset.categoryId=BOTW_Data.Translations[i].id;
+			optGroup.label=this._getItemCategoryLabel(BOTW_Data.Translations[i].id);
 
 			for(var item in BOTW_Data.Translations[i].items){
 				var opt=document.createElement('option');
 				opt.value=item;
 				opt.group=BOTW_Data.Translations[i].id;
-				opt.innerHTML=BOTW_Data.Translations[i].items[item];
+				opt.dataset.itemId=item;
+				opt.innerHTML=this._getItemTranslation(item);
 				optGroup.appendChild(opt);
 			}
 			this.selectItem.appendChild(optGroup);
@@ -392,13 +459,16 @@ SavegameEditor={
 		this.selectItem.value='Armor_180_Lower';
 
 		/* map position selectors */
-		select(
-			'pos-maptype',
-			[
+		var mapTypeOptions=(typeof BOTW_I18N!=='undefined' && typeof BOTW_I18N.getMapTypeOptions==='function')
+			? BOTW_I18N.getMapTypeOptions()
+			: [
 				'?',
 				{value:'MainField',name:'MainField'},
 				{value:'MainFieldDungeon',name:'MainFieldDungeon'}
-			],
+			];
+		select(
+			'pos-maptype',
+			mapTypeOptions,
 			function(){
 				if(this.value==='MainField'){
 					setValue('pos-map','A-1');
@@ -463,6 +533,87 @@ SavegameEditor={
 		
 		MarcTooltips.add('.tab-button',{className:'dark',fixed:true});
 	},
+	refreshTranslations:function(){
+		if(typeof BOTW_I18N==='undefined')
+			return;
+
+		var itemNames=document.querySelectorAll('.item-name[data-item-id]');
+		for(var i=0; i<itemNames.length; i++){
+			var itemId=itemNames[i].dataset.itemId;
+			if(itemId)
+				itemNames[i].innerHTML=this._getItemTranslation(itemId);
+		}
+
+		if(this.selectItem){
+			var optGroups=this.selectItem.querySelectorAll('optgroup');
+			for(var i=0; i<optGroups.length; i++){
+				var catId=optGroups[i].dataset.categoryId || optGroups[i].label;
+				optGroups[i].label=this._getItemCategoryLabel(catId);
+			}
+
+			var options=this.selectItem.querySelectorAll('option');
+			for(var i=0; i<options.length; i++){
+				var optionItemId=options[i].dataset.itemId;
+				if(optionItemId)
+					options[i].innerHTML=this._getItemTranslation(optionItemId);
+			}
+		}
+
+		var dyeOptions=(typeof BOTW_I18N.getDyeColorOptions==='function')
+			? BOTW_I18N.getDyeColorOptions()
+			: BOTW_Data.DYE_COLORS;
+		var dyeSelects=document.querySelectorAll('select[id^="select-item"]');
+		for(var i=0; i<dyeSelects.length; i++){
+			var row=dyeSelects[i].parentElement;
+			while(row && !row.dataset.itemCat)
+				row=row.parentElement;
+			if(row && row.dataset.itemCat==='clothes'){
+				var dyeValue=parseInt(dyeSelects[i].value, 10);
+				this._setSelectOptions(dyeSelects[i], dyeOptions, dyeValue);
+			}
+		}
+
+		var modifierOptions=(typeof BOTW_I18N.getModifierOptions==='function')
+			? BOTW_I18N.getModifierOptions()
+			: BOTW_Data.MODIFIERS;
+		var modifierSelects=document.querySelectorAll('select[id^="select-modifier-"]');
+		for(var i=0; i<modifierSelects.length; i++){
+			var modifierValue=parseInt(modifierSelects[i].value, 10);
+			this._setSelectOptions(modifierSelects[i], modifierOptions, modifierValue);
+		}
+
+		for(var i=0; i<6; i++){
+			var typeSelect=get('select-horse'+i+'-type');
+			if(typeSelect){
+				var typeOptions=this._arrayToSelectOpts(i===5?BOTW_Data.HORSE_TYPES.concat(BOTW_Data.HORSE_TYPES_UNTAMMED):BOTW_Data.HORSE_TYPES);
+				this._setSelectOptions(typeSelect, typeOptions, typeSelect.value);
+			}
+			if(i<5){
+				var saddleSelect=get('select-horse'+i+'-saddles');
+				var reinsSelect=get('select-horse'+i+'-reins');
+				if(saddleSelect)
+					this._setSelectOptions(saddleSelect, this._arrayToSelectOpts(BOTW_Data.HORSE_SADDLES), saddleSelect.value);
+				if(reinsSelect)
+					this._setSelectOptions(reinsSelect, this._arrayToSelectOpts(BOTW_Data.HORSE_REINS), reinsSelect.value);
+			}
+		}
+
+		var mapTypeSelect=get('select-pos-maptype');
+		if(mapTypeSelect && typeof BOTW_I18N.getMapTypeOptions==='function'){
+			var mapTypeValue=mapTypeSelect.value;
+			this._setSelectOptions(mapTypeSelect, BOTW_I18N.getMapTypeOptions(), mapTypeValue);
+			if(mapTypeSelect.options.length){
+				var mapTypeLabel=mapTypeValue;
+				if(typeof BOTW_I18N.getMapTypeLabel==='function')
+					mapTypeLabel=BOTW_I18N.getMapTypeLabel(mapTypeValue);
+				mapTypeSelect.options[0].value=mapTypeValue;
+				mapTypeSelect.options[0].textContent='* '+mapTypeLabel+' *';
+			}
+		}
+
+		if(typeof hasBeenLoaded!=='undefined' && hasBeenLoaded)
+			this._applyItemTooltips();
+	},
 
 	_timeToString:function(timeVal){
 		var seconds=timeVal%60;
@@ -510,10 +661,13 @@ SavegameEditor={
 
 		var map=this._readString(this.Offsets.MAP);
 		var mapType=this._readString(this.Offsets.MAPTYPE);
+		var mapTypeLabel=mapType;
+		if(typeof BOTW_I18N!=='undefined' && typeof BOTW_I18N.getMapTypeLabel==='function')
+			mapTypeLabel=BOTW_I18N.getMapTypeLabel(mapType);
 		getField('pos-map').children[0].value=map;
 		getField('pos-map').children[0].innerHTML='* '+map+' *';
 		getField('pos-maptype').children[0].value=mapType;
-		getField('pos-maptype').children[0].innerHTML='* '+mapType+' *';
+		getField('pos-maptype').children[0].innerHTML='* '+mapTypeLabel+' *';
 		setValue('pos-map',map)
 		setValue('pos-maptype',mapType)
 
@@ -566,9 +720,7 @@ SavegameEditor={
 			}
 
 		}
-		MarcTooltips.add('#container-weapons input',{text:'Weapon durability',position:'bottom',align:'right'});
-		MarcTooltips.add('#container-bows input',{text:'Bow durability',position:'bottom',align:'right'});
-		MarcTooltips.add('#container-shields input',{text:'Shield durability',position:'bottom',align:'right'});
+		this._applyItemTooltips();
 		BOTW_Icons.startLoadingIcons();
 
 		/* modifier column */
@@ -577,7 +729,10 @@ SavegameEditor={
 			var modifierColumn=modifierColumns[j];
 			for(var i=0; i<modifiersArray[j]; i++){
 				var modifier=tempFile.readU32(this.Offsets['FLAGS_'+modifierColumn.toUpperCase()]+i*8);
-				var modifierSelect=select('modifier-'+modifierColumn+'s-'+i, BOTW_Data.MODIFIERS.concat({value:modifier,name:this._toHexInt(modifier)}));
+				var modifierOptions=(typeof BOTW_I18N!=='undefined' && typeof BOTW_I18N.getModifierOptions==='function')
+					? BOTW_I18N.getModifierOptions()
+					: BOTW_Data.MODIFIERS;
+				var modifierSelect=select('modifier-'+modifierColumn+'s-'+i, modifierOptions.concat({value:modifier,name:this._toHexInt(modifier)}));
 				modifierSelect.value=modifier;
 
 				var additional=document.getElementById('container-'+modifierColumn+'s').children[i].children[2];
@@ -714,7 +869,10 @@ function setValueByHash(hash, val){
 			SavegameEditor._writeValue(offset, val);
 		}
 	}else{
-		alert('invalid hash '+SavegameEditor._toHexInt(hash));
+		if(typeof t==='function')
+			alert(t('errors.invalidHash',{hash:SavegameEditor._toHexInt(hash)}));
+		else
+			alert('invalid hash '+SavegameEditor._toHexInt(hash));
 	}
 }*/
 
@@ -745,24 +903,39 @@ function unlockKoroks(){
 			break;
 		}
 	}
-	MarcDialogs.alert(unlockedKoroks+' korok seeds were added');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.koroksAdded',{count:unlockedKoroks}));
+	else
+		MarcDialogs.alert(unlockedKoroks+' korok seeds were added');
 }
 
 function defeatAllHinox(){
 	var unlockedKoroks=setBooleans(BOTW_Data.DEFEATED_HINOX,'defeated-hinox');
-	MarcDialogs.alert(unlockedKoroks+' Hinox have been defeated');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.hinoxDefeated',{count:unlockedKoroks}));
+	else
+		MarcDialogs.alert(unlockedKoroks+' Hinox have been defeated');
 }
 function defeatAllTalus(){
 	var unlockedKoroks=setBooleans(BOTW_Data.DEFEATED_TALUS,'defeated-talus');
-	MarcDialogs.alert(unlockedKoroks+' Talus have been defeated');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.talusDefeated',{count:unlockedKoroks}));
+	else
+		MarcDialogs.alert(unlockedKoroks+' Talus have been defeated');
 }
 function defeatAllMolduga(){
 	var unlockedKoroks=setBooleans(BOTW_Data.DEFEATED_MOLDUGA,'defeated-molduga');
-	MarcDialogs.alert(unlockedKoroks+' Molduga have been defeated');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.moldugaDefeated',{count:unlockedKoroks}));
+	else
+		MarcDialogs.alert(unlockedKoroks+' Molduga have been defeated');
 }
 function visitAllLocations(){
 	var missingLocations=setBooleans(BOTW_Data.LOCATIONS);
-	MarcDialogs.alert(missingLocations+' unknown locations were visited');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.locationsVisited',{count:missingLocations}));
+	else
+		MarcDialogs.alert(missingLocations+' unknown locations were visited');
 }
 function setCompendiumToStock(){
 	var setToStock=0;
@@ -776,7 +949,10 @@ function setCompendiumToStock(){
 			}
 		}
 	}
-	MarcDialogs.alert(setToStock+' pics were reseted to stock.<br/>You can now safely remove all .jpg files under <u>pict_book</u> folder.');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.compendiumReset',{count:setToStock}));
+	else
+		MarcDialogs.alert(setToStock+' pics were reseted to stock.<br/>You can now safely remove all .jpg files under <u>pict_book</u> folder.');
 }
 
 var mapPinCount = 0;
@@ -882,7 +1058,10 @@ function clearMapPins(){
 	}
 	mapPinCount = 0;
 	setValue('number-map-pins', 0);
-	MarcDialogs.alert(count+' map pins removed');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.mapPinsRemoved',{count:count}));
+	else
+		MarcDialogs.alert(count+' map pins removed');
 }
 
 function iterateMapPins(f){
@@ -985,27 +1164,42 @@ function addMapPin(icon, location){
 
 function addKoroksToMap(){
 	var n = addToMap(BOTW_Data.KOROKS, SavegameEditor.Constants.ICON_TYPES.LEAF);
-	MarcDialogs.alert(n+' pins for missing Korok seeds added to map');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.korokPinsAdded',{count:n}));
+	else
+		MarcDialogs.alert(n+' pins for missing Korok seeds added to map');
 }
 
 function addHinoxToMap(){
 	var n = addToMap(BOTW_Data.DEFEATED_HINOX, SavegameEditor.Constants.ICON_TYPES.SKULL);
-	MarcDialogs.alert(n+' pins for missing Hinox added to map');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.hinoxPinsAdded',{count:n}));
+	else
+		MarcDialogs.alert(n+' pins for missing Hinox added to map');
 }
 
 function addTalusToMap(){
 	var n = addToMap(BOTW_Data.DEFEATED_TALUS, SavegameEditor.Constants.ICON_TYPES.SHIELD);
-	MarcDialogs.alert(n+' pins for missing Talus added to map');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.talusPinsAdded',{count:n}));
+	else
+		MarcDialogs.alert(n+' pins for missing Talus added to map');
 }
 
 function addMoldugaToMap(){
 	var n = addToMap(BOTW_Data.DEFEATED_MOLDUGA, SavegameEditor.Constants.ICON_TYPES.CHEST);
-	MarcDialogs.alert(n+' pins for missing Molduga added to map');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.moldugaPinsAdded',{count:n}));
+	else
+		MarcDialogs.alert(n+' pins for missing Molduga added to map');
 }
 
 function addLocationsToMap(){
 	var n = addToMap(BOTW_Data.LOCATIONS, SavegameEditor.Constants.ICON_TYPES.STAR);
-	MarcDialogs.alert(n+' pins for missing locations added to map');
+	if(typeof t==='function')
+		MarcDialogs.alert(t('alerts.locationPinsAdded',{count:n}));
+	else
+		MarcDialogs.alert(n+' pins for missing locations added to map');
 }
 
 
@@ -1056,5 +1250,117 @@ function loadMasterMode(){
 			//BOTWMasterEditor.prepare();
 		};
 		document.getElementsByTagName('head')[0].appendChild(script);
+	}
+}
+
+
+/* GUI functions */
+let currentFilePath = null;
+
+async function guiOpenFile() {
+	if (window.electronAPI) {
+		const file = await window.electronAPI.openFile();
+		if (file) {
+			currentFilePath = file.path;
+			// 에디터의 파일 로드 로직 호출
+			const uint8Array = new Uint8Array(file.data);
+			
+			// 기존 SavegameEditor의 파일 로드 방식 모방
+			// 실제 구현은 savegame-editor.js의 loadFile 로직에 따라 다를 수 있음
+			// 여기서는 전역 변수 tempFile이 사용되는 기존 방식을 따름
+			if (typeof loadFile === 'function') {
+				// 가상의 File 객체 생성 (기존 호환성 유지)
+				const fakeFile = new Blob([uint8Array]);
+				fakeFile.name = file.name;
+				
+				// 기존 에디터의 데이터 로드 방식 호출
+				tempFile = new MarcFile(uint8Array);
+				tempFile.fileName = file.name;
+				tempFile.littleEndian = false;
+
+				if (SavegameEditor.load) {
+					SavegameEditor.load();
+					document.getElementById('btn-gui-save').classList.remove('hidden');
+				}
+			}
+		}
+	}
+}
+
+async function guiSaveFile() {
+	if (window.electronAPI && currentFilePath) {
+		// 현재 수정된 데이터를 다시 Uint8Array로 가져옴
+		const data = tempFile.export();
+		const result = await window.electronAPI.saveFile(currentFilePath, data);
+		if (result.success) {
+			alert('File saved successfully!');
+		} else {
+			alert('Failed to save file: ' + result.error);
+		}
+	}
+}
+
+function setItemViewMode(mode) {
+	const containers = document.querySelectorAll('.items-container');
+	containers.forEach(container => {
+		if (mode === 'grid') {
+			container.classList.remove('list-view');
+			container.classList.add('grid-view');
+		} else {
+			container.classList.remove('grid-view');
+			container.classList.add('list-view');
+		}
+	});
+
+	// update button active states
+	document.querySelectorAll('.icon-list, .icon-grid').forEach(btn => {
+		btn.classList.toggle('active', (btn.classList.contains('icon-' + mode)));
+	});
+}
+
+function sortItems(criteria) {
+	if (criteria === 'none') return;
+
+	const containerId = 'container-' + currentTab;
+	const container = document.getElementById(containerId);
+	const items = Array.from(container.children);
+
+	items.sort((a, b) => {
+		if (criteria === 'name') {
+			const nameA = a.querySelector('.item-name').innerText.toLowerCase();
+			const nameB = b.querySelector('.item-name').innerText.toLowerCase();
+			return nameA.localeCompare(nameB);
+		} else if (criteria === 'durability') {
+			const valA = parseFloat(a.querySelector('input').value) || 0;
+			const valB = parseFloat(b.querySelector('input').value) || 0;
+			return valB - valA; // descending
+		}
+		return 0;
+	});
+
+	items.forEach(item => container.appendChild(item));
+}
+
+function restoreAllDurability(category) {
+	const container = document.getElementById('container-' + category);
+	const rows = container.querySelectorAll('.row-items');
+	let count = 0;
+
+	rows.forEach(row => {
+		const itemId = row.dataset.itemId;
+		const defaultDurability = BOTW_Data.DEFAULT_DURABILITY[itemId];
+		
+		if (defaultDurability) {
+			const input = row.querySelector('input');
+			input.value = defaultDurability;
+			input.dispatchEvent(new Event('change'));
+			count++;
+		}
+	});
+
+	if (count > 0) {
+		alert(count + ' items restored to default maximum durability.');
+	} else {
+		alert('No items found with known default durability in this category.');
 	}
 }

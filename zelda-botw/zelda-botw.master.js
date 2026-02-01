@@ -175,7 +175,10 @@ var BOTWMasterEditor=(function(){
 						parseHashFile(responseText);
 					})
 					.catch(function(){
-						alert('Unexpected error: can\'t download hash file');
+						if(typeof t==='function')
+							alert(t('errors.hashDownload'));
+						else
+							alert('Unexpected error: can\'t download hash file');
 					});
 			}else{
 				var oReq=new XMLHttpRequest();
@@ -186,12 +189,18 @@ var BOTWMasterEditor=(function(){
 					if(this.status===200) {
 						parseHashFile(responseText);
 					}else{
-						alert('Unexpected error: can\'t download hash file');
+						if(typeof t==='function')
+							alert(t('errors.hashDownload'));
+						else
+							alert('Unexpected error: can\'t download hash file');
 					}
 				};
 
 				oReq.onerror=function(oEvent){
-					alert('Unexpected error: can\'t download hash file');
+					if(typeof t==='function')
+						alert(t('errors.hashDownload'));
+					else
+						alert('Unexpected error: can\'t download hash file');
 				};
 
 				oReq.send(null);

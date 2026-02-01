@@ -1,6 +1,68 @@
 /* Zelda BOTW Savegame editor by Marc Robledo v20230902 */
 /* minify at https://cssminifier.com/ + https://www.base64-image.de/ (sprites */
 
+/* item controls */
+.item-controls {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	margin-bottom: 15px;
+	background: rgba(255, 255, 255, 0.05);
+	padding: 10px;
+	border-radius: 4px;
+}
+.item-controls .button {
+	padding: 5px 10px;
+	min-width: 40px;
+}
+.item-controls .sort-select {
+	margin: 0;
+	padding: 4px;
+	background: #2a1a1a;
+	color: #f9f5da;
+	border: 1px solid #452e2e;
+}
+.icon-list::before { content: "≡"; }
+.icon-grid::before { content: "▤"; }
+
+/* grid view */
+.items-container.grid-view {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	gap: 15px;
+}
+.grid-view .row-items {
+	flex-direction: column;
+	height: auto;
+	padding: 10px;
+	background: rgba(255, 255, 255, 0.03);
+	border: 1px solid #452e2e;
+	border-radius: 8px;
+	text-align: center;
+	justify-content: center;
+}
+.grid-view .row-items .columns {
+	width: 100% !important;
+	margin-bottom: 5px;
+}
+.grid-view .item-name {
+	font-size: 0.9em;
+	height: 2.4em;
+	overflow: hidden;
+	display: block;
+}
+.grid-view input[type="text"], .grid-view input[type="number"] {
+	width: 100% !important;
+	text-align: center;
+}
+.grid-view .item-number {
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	font-size: 0.7em;
+	opacity: 0.5;
+}
+
 /* @FONT-FACES */
 @import url('https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700,800');
 
@@ -238,6 +300,14 @@ i.tab-icon.master{background-position-x:-288px;}
 }
 .header-buttons a.button:hover{
 	background-color:#153044
+}
+.header-buttons .language-select{
+	margin-left:10px;
+	padding:6px 8px;
+	border-radius:3px;
+	border:1px solid #d3cec3;
+	background-color:#f8f6f0;
+	color:#333
 }
 
 .donate.button{

@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Savegame Editor &ndash; The legend of Zelda: Breath of the wild</title>
+	<title data-i18n="meta.title">Savegame Editor &ndash; The legend of Zelda: Breath of the wild</title>
 	<meta http-equiv="content-Type" content="text/html; charset=UTF-8"/>
-	<meta name="description" content="A savegame editor for The legend of Zelda: Breath of the wild. It can edit: items, weapon durability, modifiers and more!"/>
-	<meta name="keywords" content="html5, savegame, save, editor, hack, exploit, wii u, zelda, breath of the wild, botw, weapon, durability, modifier, horse, epona, korok, unlocker, dlc, amiibo"/>
+	<meta name="description" data-i18n-content="meta.description" content="A savegame editor for The legend of Zelda: Breath of the wild. It can edit: items, weapon durability, modifiers and more!"/>
+	<meta name="keywords" data-i18n-content="meta.keywords" content="html5, savegame, save, editor, hack, exploit, wii u, zelda, breath of the wild, botw, weapon, durability, modifier, horse, epona, korok, unlocker, dlc, amiibo"/>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
 	<link rel="shortcut icon" href="./favicon.png"/>
 	<link type="text/css" rel="stylesheet" href="./zelda-botw.css" media="all"/>
-	<script type="text/javascript" src="../savegame-editor.js"></script>
-	<script type="text/javascript" src="./zelda-botw.js"></script>
 	<script type="text/javascript" src="./zelda-botw.data.js"></script>
+	<script type="text/javascript" src="./zelda-botw.i18n.js"></script>
+	<script type="text/javascript" src="./savegame-editor.js"></script>
+	<script type="text/javascript" src="./zelda-botw.js"></script>
 	<script type="text/javascript" src="./zelda-botw.locations.js"></script>
 	<script type="text/javascript" src="./zelda-botw.icons.js"></script>
 	<script type="text/javascript" src="./zelda-botw.master.js"></script>
@@ -18,11 +19,13 @@
 	<script type="text/javascript"><!--
 		/* service worker */
 		var FORCE_HTTPS=true;
+		if(location.hostname==='localhost' || location.hostname==='127.0.0.1')
+			FORCE_HTTPS=false;
 		window.addEventListener('load',function(){
 			if(location.protocol==='http:' && FORCE_HTTPS)
 				location.replace(window.location.href.replace('http:','https:'));
 			else if(location.protocol==='https:' && 'serviceWorker' in navigator)
-				navigator.serviceWorker.register('/savegame-editors/zelda-botw/_cache_service_worker.js', {scope: '/savegame-editors/zelda-botw/'});
+				navigator.serviceWorker.register('./_cache_service_worker.js', {scope: './'});
 		}, false);
 	--></script>
 </head>
@@ -32,12 +35,20 @@
 <div id="header">
 	<div id="header-top">
 		<div class="row wrapper padding-vertical">
-			<h1>Savegame Editor for The legend of Zelda: BOTW</h1>
+			<h1 data-i18n="header.title">Savegame Editor for The legend of Zelda: BOTW</h1>
 			<div class="six columns text-left"><img src="./assets/logo.png" style="max-width:90%"/></div>
 			<div class="six columns text-right header-buttons">
-				by <a href="/" class="author">Marc Robledo</a>
-				<a href="https://github.com/marcrobledo/savegame-editors/tree/master/zelda-botw" target="_blank" class="button"><span class="sprite github"></span> See on GitHub</a>
-				<a href="https://www.paypal.me/marcrobledo/5" target="_blank" rel="nofollow" class="donate button"><span class="sprite heart"></span> Donate</a>
+				<div id="gui-controls" class="padding-vertical">
+					<button class="button colored blue with-icon icon1" onclick="guiOpenFile()">Open Save File</button>
+					<button id="btn-gui-save" class="button colored green with-icon icon9 hidden" onclick="guiSaveFile()">Quick Save</button>
+				</div>
+				<span data-i18n="header.by">by</span> <a href="/" class="author">Marc Robledo</a>
+				<a href="https://github.com/marcrobledo/savegame-editors/tree/master/zelda-botw" target="_blank" class="button"><span class="sprite github"></span> <span data-i18n="header.github">See on GitHub</span></a>
+				<a href="https://www.paypal.me/marcrobledo/5" target="_blank" rel="nofollow" class="donate button"><span class="sprite heart"></span> <span data-i18n="header.donate">Donate</span></a>
+				<select id="select-language" class="language-select" data-i18n-title="label.language">
+					<option value="en" data-i18n="lang.en">English</option>
+					<option value="ko" data-i18n="lang.ko">한국어</option>
+				</select>
 			</div>
 		</div>
 	</div>
@@ -46,18 +57,18 @@
 			<div class="twelve columns text-center">
 				<span id="span-version"></span>
 				|
-				<button id="tab-button-home" title="Home" class="tab-button active" onclick="showTab('home')"><i class="tab-icon home"></i></button>
-				<button id="tab-button-weapons" title="Weapons" class="tab-button" onclick="showTab('weapons')"><i class="tab-icon weapons"></i></button>
-				<button id="tab-button-bows" title="Bows" class="tab-button" onclick="showTab('bows')"><i class="tab-icon bows"></i></button>
-				<button id="tab-button-shields" title="Shields" class="tab-button" onclick="showTab('shields')"><i class="tab-icon shields"></i></button>
-				<button id="tab-button-clothes" title="Clothes" class="tab-button" onclick="showTab('clothes')"><i class="tab-icon clothes"></i></button>
-				<button id="tab-button-materials" title="Materials" class="tab-button" onclick="showTab('materials')"><i class="tab-icon materials"></i></button>
-				<button id="tab-button-food" title="Food" class="tab-button" onclick="showTab('food')"><i class="tab-icon food"></i></button>
-				<button id="tab-button-other" title="Other" class="tab-button" onclick="showTab('other')"><i class="tab-icon other"></i></button>
-				<button id="tab-button-horses" title="Horses" class="tab-button" onclick="showTab('horses')"><i class="tab-icon horses"></i></button>
-				<button id="tab-button-master" title="Master editor" class="tab-button" onclick="showTab('master')"><i class="tab-icon master"></i></button>
-				| <button class="button with-icon icon3" onclick="closeFile()">Close file</button>
-				<button class="button colored blue with-icon icon9" onclick="saveChanges()">Save changes</button>
+				<button id="tab-button-home" title="Home" data-i18n-title="tabs.home" class="tab-button active" onclick="showTab('home')"><i class="tab-icon home"></i></button>
+				<button id="tab-button-weapons" title="Weapons" data-i18n-title="tabs.weapons" class="tab-button" onclick="showTab('weapons')"><i class="tab-icon weapons"></i></button>
+				<button id="tab-button-bows" title="Bows" data-i18n-title="tabs.bows" class="tab-button" onclick="showTab('bows')"><i class="tab-icon bows"></i></button>
+				<button id="tab-button-shields" title="Shields" data-i18n-title="tabs.shields" class="tab-button" onclick="showTab('shields')"><i class="tab-icon shields"></i></button>
+				<button id="tab-button-clothes" title="Clothes" data-i18n-title="tabs.clothes" class="tab-button" onclick="showTab('clothes')"><i class="tab-icon clothes"></i></button>
+				<button id="tab-button-materials" title="Materials" data-i18n-title="tabs.materials" class="tab-button" onclick="showTab('materials')"><i class="tab-icon materials"></i></button>
+				<button id="tab-button-food" title="Food" data-i18n-title="tabs.food" class="tab-button" onclick="showTab('food')"><i class="tab-icon food"></i></button>
+				<button id="tab-button-other" title="Other" data-i18n-title="tabs.other" class="tab-button" onclick="showTab('other')"><i class="tab-icon other"></i></button>
+				<button id="tab-button-horses" title="Horses" data-i18n-title="tabs.horses" class="tab-button" onclick="showTab('horses')"><i class="tab-icon horses"></i></button>
+				<button id="tab-button-master" title="Master editor" data-i18n-title="tabs.master" class="tab-button" onclick="showTab('master')"><i class="tab-icon master"></i></button>
+				| <button class="button with-icon icon3" onclick="closeFile()" data-i18n="toolbar.closeFile">Close file</button>
+				<button class="button colored blue with-icon icon9" onclick="saveChanges()" data-i18n="toolbar.saveChanges">Save changes</button>
 			</div>
 		</div>
 	</div>
@@ -71,92 +82,92 @@
 	<!-- TAB: HOME -->
 	<div id="tab-home">
 		<!-- RUPEES -->
-		<h3 class="border-red">Stats</h3>
+		<h3 class="border-red" data-i18n="section.stats">Stats</h3>
 		<div class="row">
-			<div class="ten columns"><label for="number-rupees">Rupees</label></div>
+			<div class="ten columns"><label for="number-rupees" data-i18n="label.rupees">Rupees</label></div>
 			<div class="two columns"><input id="number-rupees" class="full-width" type="text" /></div>
 		</div>
 		<div class="row">
-			<div class="ten columns"><label for="number-mons">Mons</label></div>
+			<div class="ten columns"><label for="number-mons" data-i18n="label.mons">Mons</label></div>
 			<div class="two columns"><input id="number-mons" class="full-width" type="text" /></div>
 		</div>
 		<div class="row">
-			<div class="ten columns"><label for="number-relic-gerudo">Gerudo relic remaining uses</label></div>
+			<div class="ten columns"><label for="number-relic-gerudo" data-i18n="label.relicGerudo">Gerudo relic remaining uses</label></div>
 			<div class="two columns text-right"><input id="number-relic-gerudo" class="small" type="text" /></div>
 		</div>
 		<div class="row">
-			<div class="ten columns"><label for="number-relic-goron">Goron relic remaining uses</label></div>
+			<div class="ten columns"><label for="number-relic-goron" data-i18n="label.relicGoron">Goron relic remaining uses</label></div>
 			<div class="two columns text-right"><input id="number-relic-goron" class="small" type="text" /></div>
 		</div>
 		<div class="row">
-			<div class="ten columns"><label for="number-relic-rito">Rito relic remaining uses</label></div>
+			<div class="ten columns"><label for="number-relic-rito" data-i18n="label.relicRito">Rito relic remaining uses</label></div>
 			<div class="two columns text-right"><input id="number-relic-rito" class="small" type="text" /></div>
 		</div>
 		<div class="row" id="row-motorcycle">
-			<div class="ten columns"><label for="checkbox-motorcycle">Motorcycle</label></div>
+			<div class="ten columns"><label for="checkbox-motorcycle" data-i18n="label.motorcycle">Motorcycle</label></div>
 			<div class="two columns text-right"><input id="checkbox-motorcycle" type="checkbox" value="1" /></div>
 		</div>
 		<div class="row">
-			<div class="ten columns"><label for="number-playtime">Playtime</label></div>
+			<div class="ten columns"><label for="number-playtime" data-i18n="label.playtime">Playtime</label></div>
 			<div class="two columns"><input type="text" id="number-playtime" class="text-right full-width" disabled /></div>
 		</div>
 		<div class="row">
-			<div class="ten columns"><label for="select-max-hearts">Max. hearts</label></div>
+			<div class="ten columns"><label for="select-max-hearts" data-i18n="label.maxHearts">Max. hearts</label></div>
 			<div class="two columns">
 				<select id="select-max-hearts" class="full-width">
-					<option value="4">1</option>
-					<option value="8">2 hearts</option>
-					<option value="12">3 hearts</option>
-					<option value="16">4 hearts</option>
-					<option value="20">5 hearts</option>
-					<option value="24">6 hearts</option>
-					<option value="28">7 hearts</option>
-					<option value="32">8 hearts</option>
-					<option value="36">9 hearts</option>
-					<option value="40">10 hearts</option>
-					<option value="44">11 hearts</option>
-					<option value="48">12 hearts</option>
-					<option value="52">13 hearts</option>
-					<option value="56">14 hearts</option>
-					<option value="60">15 hearts</option>
-					<option value="64">16 hearts</option>
-					<option value="68">17 hearts</option>
-					<option value="72">18 hearts</option>
-					<option value="76">19 hearts</option>
-					<option value="80">20 hearts</option>
-					<option value="84">21 hearts</option>
-					<option value="88">22 hearts</option>
-					<option value="92">23 hearts</option>
-					<option value="96">24 hearts</option>
-					<option value="100">25 hearts</option>
-					<option value="104">26 hearts</option>
-					<option value="108">27 hearts</option>
-					<option value="112">28 hearts</option>
-					<option value="116">29 hearts</option>
-					<option value="120">30 hearts</option>
+					<option value="4" data-i18n="hearts.1">1</option>
+					<option value="8" data-i18n="hearts.2">2 hearts</option>
+					<option value="12" data-i18n="hearts.3">3 hearts</option>
+					<option value="16" data-i18n="hearts.4">4 hearts</option>
+					<option value="20" data-i18n="hearts.5">5 hearts</option>
+					<option value="24" data-i18n="hearts.6">6 hearts</option>
+					<option value="28" data-i18n="hearts.7">7 hearts</option>
+					<option value="32" data-i18n="hearts.8">8 hearts</option>
+					<option value="36" data-i18n="hearts.9">9 hearts</option>
+					<option value="40" data-i18n="hearts.10">10 hearts</option>
+					<option value="44" data-i18n="hearts.11">11 hearts</option>
+					<option value="48" data-i18n="hearts.12">12 hearts</option>
+					<option value="52" data-i18n="hearts.13">13 hearts</option>
+					<option value="56" data-i18n="hearts.14">14 hearts</option>
+					<option value="60" data-i18n="hearts.15">15 hearts</option>
+					<option value="64" data-i18n="hearts.16">16 hearts</option>
+					<option value="68" data-i18n="hearts.17">17 hearts</option>
+					<option value="72" data-i18n="hearts.18">18 hearts</option>
+					<option value="76" data-i18n="hearts.19">19 hearts</option>
+					<option value="80" data-i18n="hearts.20">20 hearts</option>
+					<option value="84" data-i18n="hearts.21">21 hearts</option>
+					<option value="88" data-i18n="hearts.22">22 hearts</option>
+					<option value="92" data-i18n="hearts.23">23 hearts</option>
+					<option value="96" data-i18n="hearts.24">24 hearts</option>
+					<option value="100" data-i18n="hearts.25">25 hearts</option>
+					<option value="104" data-i18n="hearts.26">26 hearts</option>
+					<option value="108" data-i18n="hearts.27">27 hearts</option>
+					<option value="112" data-i18n="hearts.28">28 hearts</option>
+					<option value="116" data-i18n="hearts.29">29 hearts</option>
+					<option value="120" data-i18n="hearts.30">30 hearts</option>
 				</select>
 			</div>
 		</div>
 		<div class="row">
-			<div class="ten columns"><label for="select-max-stamina">Max. stamina </label></div>
+			<div class="ten columns"><label for="select-max-stamina" data-i18n="label.maxStamina">Max. stamina </label></div>
 			<div class="two columns">
-				<select id="select-max-stamina" class="full-width">
-					<option value="1148846080">1 wheel</option>
-					<option value="1150681088">1 wheel+1/5</option>
-					<option value="1152319488">1 wheel+2/5</option>
-					<option value="1153957888">1 wheel+3/5</option>
-					<option value="1155596288">1 wheel+4/5</option>
-					<option value="1157234688">2 wheels</option>
-					<option value="1158250496">2 wheels+1/5</option>
-					<option value="1159069696">2 wheels+2/5</option>
-					<option value="1159888896">2 wheels+3/5</option>
-					<option value="1160708096">2 wheels+4/5</option>
-					<option value="1161527296">3 wheels</option>
-				</select>
+			<select id="select-max-stamina" class="full-width">
+				<option value="1148846080" data-i18n="stamina.1">1 wheel</option>
+				<option value="1150681088" data-i18n="stamina.1_1_5">1 wheel+1/5</option>
+				<option value="1152319488" data-i18n="stamina.1_2_5">1 wheel+2/5</option>
+				<option value="1153957888" data-i18n="stamina.1_3_5">1 wheel+3/5</option>
+				<option value="1155596288" data-i18n="stamina.1_4_5">1 wheel+4/5</option>
+				<option value="1157234688" data-i18n="stamina.2">2 wheels</option>
+				<option value="1158250496" data-i18n="stamina.2_1_5">2 wheels+1/5</option>
+				<option value="1159069696" data-i18n="stamina.2_2_5">2 wheels+2/5</option>
+				<option value="1159888896" data-i18n="stamina.2_3_5">2 wheels+3/5</option>
+				<option value="1160708096" data-i18n="stamina.2_4_5">2 wheels+4/5</option>
+				<option value="1161527296" data-i18n="stamina.3">3 wheels</option>
+			</select>
 			</div>
 		</div>
 		<div class="row" style="margin-top:10px">
-			<div class="ten columns">Scale score</div>
+			<div class="ten columns" data-i18n="label.scaleScore">Scale score</div>
 			<div class="two columns text-right">
 				<span id="span-scale-score"></span>
 				<a target="_blank" href="https://www.reddit.com/r/Breath_of_the_Wild/comments/8fchiq/about_difficulty_scaling_for_enemies_and_weapons/" class="external-link-help help">?</a>
@@ -164,16 +175,16 @@
 		</div>
 		
 		<!-- Coordinates (Requires a memory editor) -->
-		<h3 class="border-green">Coordinates</h3>
+		<h3 class="border-green" data-i18n="section.coordinates">Coordinates</h3>
 		<div class="row">
-			<div class="six columns"><label for="float-pos-x">Current Link coordinates (XYZ)</label></div>
+			<div class="six columns"><label for="float-pos-x" data-i18n="label.linkCoordinates">Current Link coordinates (XYZ)</label></div>
 			<div class="two columns"><input id="float-pos-x" onchange="guessMainFieldGrid()" class="full-width" type="text" /></div>
 			<div class="two columns"><input id="float-pos-y" onchange="guessMainFieldGrid()" class="full-width" type="text" /></div>
 			<div class="two columns"><input id="float-pos-z" onchange="guessMainFieldGrid()" class="full-width" type="text" /></div>
 		</div>
 
 		<div class="row">
-			<div class="six columns"><label for="select-pos-maptype">Map</label></div>
+			<div class="six columns"><label for="select-pos-maptype" data-i18n="label.map">Map</label></div>
 			<div class="three columns"><select id="select-pos-maptype"></select></div>
 			<div class="three columns"><select id="select-pos-map"></select></div>
 		</div>
@@ -184,147 +195,180 @@
 
 
 		<!-- COMPLETIONISM -->
-		<h3 class="border-blue">Completionism</h3>
+		<h3 class="border-blue" data-i18n="section.completionism">Completionism</h3>
 		<div class="row">
-			<div class="seven columns"><label for="number-koroks">Korok seeds</label></div>
+			<div class="seven columns"><label for="number-koroks" data-i18n="label.korokSeeds">Korok seeds</label></div>
 			<div class="five columns text-right">
 				<input type="text" id="number-koroks" style="width:50px" disabled />
-				<button onclick="unlockKoroks()">Get all</button>
-				<button onclick="addKoroksToMap()">Add pins to Map</button>
+				<button onclick="unlockKoroks()" data-i18n="action.getAll">Get all</button>
+				<button onclick="addKoroksToMap()" data-i18n="action.addPinsToMap">Add pins to Map</button>
 			</div>
 		</div>
 
 		<div class="row">
-			<div class="seven columns"><label for="number-defeated-hinox">Defeated Hinox</label></div>
+			<div class="seven columns"><label for="number-defeated-hinox" data-i18n="label.defeatedHinox">Defeated Hinox</label></div>
 			<div class="five columns text-right">
 				<input type="text" id="number-defeated-hinox" style="width:50px" disabled />
-				<button onclick="defeatAllHinox()">Defeat all</button>
-				<button onclick="addHinoxToMap()">Add pins to Map</button>
+				<button onclick="defeatAllHinox()" data-i18n="action.defeatAll">Defeat all</button>
+				<button onclick="addHinoxToMap()" data-i18n="action.addPinsToMap">Add pins to Map</button>
 			</div>
 		</div>
 		<div class="row">
-			<div class="seven columns"><label for="number-defeated-talus">Defeated Talus</label></div>
+			<div class="seven columns"><label for="number-defeated-talus" data-i18n="label.defeatedTalus">Defeated Talus</label></div>
 			<div class="five columns text-right">
 				<input type="text" id="number-defeated-talus" style="width:50px" disabled />
-				<button onclick="defeatAllTalus()">Defeat all</button>
-				<button onclick="addTalusToMap()">Add pins to Map</button>
+				<button onclick="defeatAllTalus()" data-i18n="action.defeatAll">Defeat all</button>
+				<button onclick="addTalusToMap()" data-i18n="action.addPinsToMap">Add pins to Map</button>
 			</div>
 		</div>
 		<div class="row">
-			<div class="seven columns"><label for="number-defeated-molduga">Defeated Molduga</label></div>
+			<div class="seven columns"><label for="number-defeated-molduga" data-i18n="label.defeatedMolduga">Defeated Molduga</label></div>
 			<div class="five columns text-right">
 				<input type="text" id="number-defeated-molduga" style="width:50px" disabled />
-				<button onclick="defeatAllMolduga()">Defeat all</button>
-				<button onclick="addMoldugaToMap()">Add pins to Map</button>
+				<button onclick="defeatAllMolduga()" data-i18n="action.defeatAll">Defeat all</button>
+				<button onclick="addMoldugaToMap()" data-i18n="action.addPinsToMap">Add pins to Map</button>
 			</div>
 		</div>
 		<div class="row">
-			<div class="nine columns"><label for="number-defeated-molduga">Hyrule Compendium</label></div>
+			<div class="nine columns"><label for="number-defeated-molduga" data-i18n="label.hyruleCompendium">Hyrule Compendium</label></div>
 			<div class="three columns text-right">
-				<button onclick="setCompendiumToStock()">Set to stock</button>
+				<button onclick="setCompendiumToStock()" data-i18n="action.setToStock">Set to stock</button>
 			</div>
 		</div>
 
 		<div class="row">
-			<div class="seven columns">Visited locations</div>
+			<div class="seven columns" data-i18n="label.visitedLocations">Visited locations</div>
 			<div class="five columns text-right">
-				<button onclick="visitAllLocations()">Visit all</button>
-				<button onclick="addLocationsToMap()">Add pins to Map</button>
+				<button onclick="visitAllLocations()" data-i18n="action.visitAll">Visit all</button>
+				<button onclick="addLocationsToMap()" data-i18n="action.addPinsToMap">Add pins to Map</button>
 			</div>
 		</div>
 
 		<div class="row">
-			<div class="nine columns">Map Pins</div>
+			<div class="nine columns" data-i18n="label.mapPins">Map Pins</div>
 			<div class="three columns text-right">
 				<input type="text" id="number-map-pins" style="width:50px" disabled />
-				<button onclick="clearMapPins()">Clear</button>
+				<button onclick="clearMapPins()" data-i18n="action.clear">Clear</button>
 			</div>
 		</div>
 	</div>
 	
 	<!-- TAB: WEAPONS -->
 	<div id="tab-weapons">
-		<h3>Weapons</h3><div id="container-weapons"></div>
+		<h3 data-i18n="heading.weapons">Weapons</h3>
+		<div class="item-controls padding-vertical">
+			<button class="button icon-list active" onclick="setItemViewMode('list')" title="List View"></button>
+			<button class="button icon-grid" onclick="setItemViewMode('grid')" title="Grid View"></button>
+			<select onchange="sortItems(this.value)" class="sort-select">
+				<option value="none" data-i18n="sort.none">Default Sort</option>
+				<option value="name" data-i18n="sort.name">Sort by Name</option>
+				<option value="durability" data-i18n="sort.durability">Sort by Durability</option>
+			</select>
+			<button class="button colored green" onclick="restoreAllDurability('weapons')" data-i18n="action.restoreDurability">Restore All Durability</button>
+		</div>
+		<div id="container-weapons" class="items-container list-view"></div>
 	</div>
 
 	<!-- TAB: BOWS -->
 	<div id="tab-bows">
-		<h3>Bows</h3><div id="container-bows"></div>
+		<h3 data-i18n="heading.bows">Bows</h3>
+		<div class="item-controls padding-vertical">
+			<button class="button icon-list active" onclick="setItemViewMode('list')" title="List View"></button>
+			<button class="button icon-grid" onclick="setItemViewMode('grid')" title="Grid View"></button>
+			<select onchange="sortItems(this.value)" class="sort-select">
+				<option value="none" data-i18n="sort.none">Default Sort</option>
+				<option value="name" data-i18n="sort.name">Sort by Name</option>
+				<option value="durability" data-i18n="sort.durability">Sort by Durability</option>
+			</select>
+			<button class="button colored green" onclick="restoreAllDurability('bows')" data-i18n="action.restoreDurability">Restore All Durability</button>
+		</div>
+		<div id="container-bows" class="items-container list-view"></div>
 	</div>
 
 	<!-- TAB: SHIELDS -->
 	<div id="tab-shields">
-		<h3>Shields</h3><div id="container-shields"></div>
+		<h3 data-i18n="heading.shields">Shields</h3>
+		<div class="item-controls padding-vertical">
+			<button class="button icon-list active" onclick="setItemViewMode('list')" title="List View"></button>
+			<button class="button icon-grid" onclick="setItemViewMode('grid')" title="Grid View"></button>
+			<select onchange="sortItems(this.value)" class="sort-select">
+				<option value="none" data-i18n="sort.none">Default Sort</option>
+				<option value="name" data-i18n="sort.name">Sort by Name</option>
+				<option value="durability" data-i18n="sort.durability">Sort by Durability</option>
+			</select>
+			<button class="button colored green" onclick="restoreAllDurability('shields')" data-i18n="action.restoreDurability">Restore All Durability</button>
+		</div>
+		<div id="container-shields" class="items-container list-view"></div>
 	</div>
 
 	<!-- TAB: CLOTHES -->
 	<div id="tab-clothes">
-		<h3>Clothes</h3><div id="container-clothes"></div>
+		<h3 data-i18n="heading.clothes">Clothes</h3><div id="container-clothes"></div>
 	</div>
 
 	<!-- TAB: MATERIALS -->
 	<div id="tab-materials">
-		<h3>Materials</h3><div id="container-materials"></div>
+		<h3 data-i18n="heading.materials">Materials</h3><div id="container-materials"></div>
 	</div>
 
 	<!-- TAB: FOOD -->
 	<div id="tab-food">
-		<h3>Food</h3><div id="container-food"></div>
+		<h3 data-i18n="heading.food">Food</h3><div id="container-food"></div>
 	</div>
 
 	<!-- TAB: OTHER -->
 	<div id="tab-other">
-		<h3>Other</h3><div id="container-other"></div>
+		<h3 data-i18n="heading.other">Other</h3><div id="container-other"></div>
 	</div>
 
 	<!-- ADD ITEM BUTTON -->
 	<div id="add-item-button" class="text-center">
-		<button class="with-icon icon1" onclick="SavegameEditor.addItem()">Add item</button>
+		<button class="with-icon icon1" onclick="SavegameEditor.addItem()" data-i18n="action.addItem">Add item</button>
 	</div>
 	<!-- TAB: HORSES -->
 	<div id="tab-horses">
-		<h3 class="border-blue">Horses</h3>
-		<div class="row"><div class="twelve columns">Horse #1</div></div>
+		<h3 class="border-blue" data-i18n="section.horses">Horses</h3>
+		<div class="row"><div class="twelve columns" data-i18n="horse.1">Horse #1</div></div>
 		<div class="row" id="row-horse0">
 			<div class="three columns"><select id="select-horse0-type"></select></div>
 			<div class="three columns"><input type="text" id="input-horse0-name" /></div>
 			<div class="three columns"><select id="select-horse0-saddles"></select></div>
 			<div class="three columns"><select id="select-horse0-reins"></select></div>
 		</div>
-		<div class="row"><div class="twelve columns">Horse #2</div></div>
+		<div class="row"><div class="twelve columns" data-i18n="horse.2">Horse #2</div></div>
 		<div class="row" id="row-horse1">
 			<div class="three columns"><select id="select-horse1-type"></select></div>
 			<div class="three columns"><input type="text" id="input-horse1-name" /></div>
 			<div class="three columns"><select id="select-horse1-saddles"></select></div>
 			<div class="three columns"><select id="select-horse1-reins"></select></div>
 		</div>
-		<div class="row"><div class="twelve columns">Horse #3</div></div>
+		<div class="row"><div class="twelve columns" data-i18n="horse.3">Horse #3</div></div>
 		<div class="row" id="row-horse2">
 			<div class="three columns"><select id="select-horse2-type"></select></div>
 			<div class="three columns"><input type="text" id="input-horse2-name" /></div>
 			<div class="three columns"><select id="select-horse2-saddles"></select></div>
 			<div class="three columns"><select id="select-horse2-reins"></select></div>
 		</div>
-		<div class="row"><div class="twelve columns">Horse #4</div></div>
+		<div class="row"><div class="twelve columns" data-i18n="horse.4">Horse #4</div></div>
 		<div class="row" id="row-horse3">
 			<div class="three columns"><select id="select-horse3-type"></select></div>
 			<div class="three columns"><input type="text" id="input-horse3-name" /></div>
 			<div class="three columns"><select id="select-horse3-saddles"></select></div>
 			<div class="three columns"><select id="select-horse3-reins"></select></div>
 		</div>
-		<div class="row"><div class="twelve columns">Horse #5</div></div>
+		<div class="row"><div class="twelve columns" data-i18n="horse.5">Horse #5</div></div>
 		<div class="row" id="row-horse4">
 			<div class="three columns"><select id="select-horse4-type"></select></div>
 			<div class="three columns"><input type="text" id="input-horse4-name" /></div>
 			<div class="three columns"><select id="select-horse4-saddles"></select></div>
 			<div class="three columns"><select id="select-horse4-reins"></select></div>
 		</div>
-		<div class="row"><div class="twelve columns">Untammed horse</div></div>
+		<div class="row"><div class="twelve columns" data-i18n="horse.untamed">Untammed horse</div></div>
 		<div class="row" id="row-horse5">
 			<div class="three columns end"><select id="select-horse5-type"></select></div>
 		</div>
 		<div class="row">
-			<div class="six columns"><label for="float-pos-x-horse">Current horse coordinates (XYZ)</label></div>
+			<div class="six columns"><label for="float-pos-x-horse" data-i18n="label.horseCoordinates">Current horse coordinates (XYZ)</label></div>
 			<div class="two columns"><input id="float-pos-x-horse" class="full-width" type="text" /></div>
 			<div class="two columns"><input id="float-pos-y-horse" class="full-width" type="text" /></div>
 			<div class="two columns"><input id="float-pos-z-horse" class="full-width" type="text" /></div>
@@ -333,26 +377,26 @@
 
 	<!-- TAB: MASTER EDITOR -->
 	<div id="tab-master">
-		<div id="master-editor-loading" class="text-center">Master editor is loading...</div>
+		<div id="master-editor-loading" class="text-center" data-i18n="master.loading">Master editor is loading...</div>
 		<div id="master-editor-hidden" class="hidden">
-			<label for="select-filters">Filter: </label>
+			<label for="select-filters" data-i18n="master.filter">Filter: </label>
 			<select id="select-filters" onchange="BOTWMasterEditor.refreshResults()">
-				<option value="">- All -</option>
-				<option value="WolfLink_|Amiibo">Amiibo</option>
-				<option value="_DispNameFlag$">Display flag names</option>
+				<option value="" data-i18n="master.filter.all">- All -</option>
+				<option value="WolfLink_|Amiibo" data-i18n="master.filter.amiibo">Amiibo</option>
+				<option value="_DispNameFlag$" data-i18n="master.filter.displayFlags">Display flag names</option>
 				<option value="100enemy">DLC1</option>
 				<option value="Motorcycle">DLC2</option>
-				<option value="Horse_">Horses</option>
-				<option value="Defeat_Enemy_|Defeated.+Num">Defeated enemies</option>
-				<option value="Porch|Cook">Items</option>
-				<option value="IsGet_">Get flags</option>
-				<option value="HiddenKorok|OldKorok_">Korok</option>
-				<option value="^Location_">Visited locations</option>
-				<option value="AlbumPicture|PictureBook">Compendium</option>
+				<option value="Horse_" data-i18n="master.filter.horses">Horses</option>
+				<option value="Defeat_Enemy_|Defeated.+Num" data-i18n="master.filter.defeatedEnemies">Defeated enemies</option>
+				<option value="Porch|Cook" data-i18n="master.filter.items">Items</option>
+				<option value="IsGet_" data-i18n="master.filter.getFlags">Get flags</option>
+				<option value="HiddenKorok|OldKorok_" data-i18n="master.filter.korok">Korok</option>
+				<option value="^Location_" data-i18n="master.filter.locations">Visited locations</option>
+				<option value="AlbumPicture|PictureBook" data-i18n="master.filter.compendium">Compendium</option>
 			</select>
-			<input id="input-custom-filter" type="text" placeholder="Search hash keys" onchange="BOTWMasterEditor.refreshResults()" />
+			<input id="input-custom-filter" type="text" placeholder="Search hash keys" data-i18n-placeholder="master.searchPlaceholder" onchange="BOTWMasterEditor.refreshResults()" />
 			
-			 | <label for="select-page">Page: </label>
+			 | <label for="select-page" data-i18n="master.page">Page: </label>
 			<button id="page-prev" onclick="BOTWMasterEditor.prevPage()">&laquo;</button>
 			<select id="select-page" class="small" onchange="BOTWMasterEditor.setPage(this.selectedIndex)"></select>
 			<button id="page-next" onclick="BOTWMasterEditor.nextPage()">&raquo;</button>

@@ -25,6 +25,20 @@ var BOTW_Data={
 	/* dlc exclusive */
 	0x579819ff,0x8bb63be6,0x6a465a2b,0x85888b2f,0x746364da,0x9b7f924a,0xc346f5eb,0xca20b58b,0x49d23c38],
 
+	DEFAULT_DURABILITY:{
+		/* Weapons */
+		Weapon_Sword_001: 20, Weapon_Sword_002: 23, Weapon_Sword_003: 27, Weapon_Sword_024: 36, Weapon_Sword_030: 27,
+		Weapon_Sword_047: 48, Weapon_Sword_070: 40, Weapon_Sword_033: 36, Weapon_Sword_034: 40, Weapon_Sword_035: 36,
+		Weapon_Lsword_001: 20, Weapon_Lsword_002: 25, Weapon_Lsword_003: 30, Weapon_Lsword_024: 40, Weapon_Lsword_047: 72,
+		Weapon_Spear_001: 20, Weapon_Spear_002: 25, Weapon_Spear_003: 30, Weapon_Spear_024: 50, Weapon_Spear_047: 70,
+		/* Bows */
+		Weapon_Bow_001: 20, Weapon_Bow_002: 36, Weapon_Bow_035: 48, Weapon_Bow_036: 60, Weapon_Bow_032: 40, Weapon_Bow_009: 20,
+		Weapon_Bow_026: 30, Weapon_Bow_033: 26, Weapon_Bow_071: 100,
+		/* Shields */
+		Weapon_Shield_001: 12, Weapon_Shield_002: 16, Weapon_Shield_003: 23, Weapon_Shield_022: 29, Weapon_Shield_030: 800,
+		Weapon_Shield_033: 70, Weapon_Shield_038: 32
+	},
+
 	DYE_COLORS:['-default-','Blue','Red','Yellow','White','Black','Purple','Green','Light Blue','Navy','Orange','Peach','Crimson','Light Yellow','Brown','Gray',{value:0xffffffff,name:'locked color'}],
 	MODIFIERS:[{value:0x00000000,name:'(none)'},{value:0x00000001,name:'Attack up'},{value:0x80000001,name:'Attack up ★'},{value:0x00000002,name:'Durability up'},{value:0x80000002,name:'Durability up ★'},{value:0x00000004,name:'Critical hit up'},{value:0x80000004,name:'Critical hit up ★'},{value:0x00000008,name:'(Weapon only) Long throw'},{value:0x80000008,name:'(Weapon only) Long throw ★'},{value:0x00000010,name:'(Bow only) Five-Shot Burst'},{value:0x80000010,name:'(Bow only) Five-Shot Burst ★'},{value:0x00000020,name:'(Bow only) AddZoomRapid [unused]'},{value:0x80000020,name:'(Bow only) AddZoomRapid ★ [unused]'},{value:0x00000040,name:'(Bow only) Quick shot'},{value:0x80000040,name:'(Bow only) Quick shot ★'},{value:0x00000080,name:'(Shield only) Shield surf up'},{value:0x80000080,name:'(Shield only) Shield surf up ★'},{value:0x00000100,name:'(Shield only) Shield guard up'},{value:0x80000100,name:'(Shield only) Shield guard up ★'}],
 
